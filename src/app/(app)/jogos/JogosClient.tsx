@@ -283,6 +283,7 @@ export default function JogosClient({ jogosIniciais, palpitesIniciais, userId, p
                     </div>
           );
           })}
+        </div>
       </div>
     </div>
   );
