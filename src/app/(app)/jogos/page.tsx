@@ -11,7 +11,7 @@ export default async function JogosPage() {
   if (!user) redirect("/login");
 
   const [{ data: jogos }, { data: palpites }, { data: perfil }] = await Promise.all([
-    supabase.from("jogos").select("*").order("ordem"),
+    supabase.from("jogos").select("*").order("data_hora"),
     supabase.from("palpites").select("*").eq("user_id", user.id),
     supabase.from("perfis").select("*").eq("id", user.id).single(),
   ]);
