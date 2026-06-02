@@ -77,9 +77,10 @@ export default function JogosClient({ jogosIniciais, palpitesIniciais, userId, p
             <h1 className="text-white font-bold text-xl">⚽ Bolão 2026</h1>
             <p className="text-green-200 text-xs mt-0.5">Olá, {perfil?.nome?.split(" ")[0]}!</p>
           </div>
-          <div className="text-right text-xs text-green-200">
-            <div>🏆 Exato = 3pts</div>
-            <div>✅ Vencedor = 1pt</div>
+          <div className="text-right text-xs text-green-200 space-y-0.5">
+            <div>🏆 Exato = <strong>+3pts</strong></div>
+            <div>✅ Vencedor = <strong>+1pt</strong></div>
+            <div>💀 Invertido = <strong>-1pt</strong></div>
           </div>
         </div>
 

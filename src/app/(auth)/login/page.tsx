@@ -73,9 +73,13 @@ export default function LoginPage() {
         </p>
       </div>
 
-      <p className="text-green-300 text-xs mt-8">
-        🏆 Placar exato = 3pts · Vencedor certo = 1pt
-      </p>
+      <div className="text-center text-xs text-green-200 mt-6 space-y-1">
+        <p className="font-semibold text-[#ffdf00]">📋 Pontuação</p>
+        <p>🏆 Placar exato = <strong>+3 pts</strong></p>
+        <p>✅ Acertou vencedor/empate = <strong>+1 pt</strong></p>
+        <p>❌ Errou o resultado = <strong>0 pts</strong></p>
+        <p>💀 Placar invertido exato = <strong>-1 pt</strong></p>
+      </div>
     </div>
   );
 }
