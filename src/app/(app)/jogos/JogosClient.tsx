@@ -3,8 +3,8 @@
 import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { Jogo, Palpite, Perfil } from "@/types";
-import { formatDataHora, jogoAberto, bandeiraPais, labelFase, cn } from "@/lib/utils";
-import Image from "next/image";
+import { formatDataHora, jogoAberto, bandeiraPais, labelFase, cn, PONTUACAO } from "@/lib/utils";
+import RegrasBolao from "@/components/RegrasBolao";
 
 interface Props {
   jogosIniciais: Jogo[];
@@ -21,6 +21,7 @@ export default function JogosClient({ jogosIniciais, palpitesIniciais, userId, p
   const [saving, setSaving] = useState<Set<string>>(new Set());
   const [drafts, setDrafts] = useState<Map<string, { casa: string; fora: string }>>(new Map());
   const [faseFiltro, setFaseFiltro] = useState<string>("grupos");
+  const [mostrarRegras, setMostrarRegras] = useState(false);
   const supabase = createClient();
 
   useEffect(() => {
@@ -77,12 +78,18 @@ export default function JogosClient({ jogosIniciais, palpitesIniciais, userId, p
             <h1 className="text-white font-bold text-xl">⚽ Bolão 2026</h1>
             <p className="text-green-200 text-xs mt-0.5">Olá, {perfil?.nome?.split(" ")[0]}!</p>
           </div>
-          <div className="text-right text-xs text-green-200 space-y-0.5">
-            <div>🏆 Exato = <strong>+3pts</strong></div>
-            <div>✅ Vencedor = <strong>+1pt</strong></div>
-            <div>💀 Invertido = <strong>-1pt</strong></div>
-          </div>
+          <button onClick={() => setMostrarRegras((v) => !v)}
+            className="text-xs text-green-200 underline underline-offset-2">
+            📋 Ver regras
+          </button>
         </div>
+
+        {/* Regras expansíveis */}
+        {mostrarRegras && (
+          <div className="mt-2">
+            <RegrasBolao />
+          </div>
+        )}
 
         {/* Filtro de fase */}
         <div className="flex gap-2 mt-4 overflow-x-auto pb-1 scrollbar-hide">
@@ -174,14 +181,14 @@ export default function JogosClient({ jogosIniciais, palpitesIniciais, userId, p
                             {palpite && jogo.encerrado && (
                               <div className={cn(
                                 "px-2 py-0.5 rounded-full text-xs font-bold",
-                                palpite.pontos === 3  ? "bg-[#ffdf00] text-[#002776]" :
-                                palpite.pontos === 1  ? "bg-green-100 text-green-700" :
-                                palpite.pontos === -1 ? "bg-red-200 text-red-800" :
+                                palpite.pontos > 1   ? "bg-[#ffdf00] text-[#002776]" :
+                                palpite.pontos === 1 ? "bg-green-100 text-green-700" :
+                                palpite.pontos < 0   ? "bg-red-200 text-red-800" :
                                 "bg-red-100 text-red-600"
                               )}>
-                                {palpite.pontos === 3  ? "🏆 +3 pts" :
-                                 palpite.pontos === 1  ? "✅ +1 pt"  :
-                                 palpite.pontos === -1 ? "💀 -1 pt"  : "❌ 0 pts"}
+                                {palpite.pontos > 1  ? `🏆 +${palpite.pontos} pts` :
+                                 palpite.pontos === 1 ? `✅ +${palpite.pontos} pt` :
+                                 palpite.pontos < 0  ? `💀 ${palpite.pontos} pt` : "❌ 0 pts"}
                               </div>
                             )}
                           </div>

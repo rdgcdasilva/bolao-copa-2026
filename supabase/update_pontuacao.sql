@@ -1,9 +1,11 @@
 -- ================================================
--- ATUALIZA função de pontuação com novas regras:
---   +3 pts → placar exato
---   +1 pt  → acertou vencedor ou empate
---    0 pts → errou o resultado
---   -1 pt  → placar invertido exato (ex: 2×0 palpitado, saiu 0×2)
+-- PONTUAÇÃO PROGRESSIVA POR FASE
+-- Grupos:   exato=+3,  vencedor=+1, invertido=-1
+-- Oitavas:  exato=+5,  vencedor=+2, invertido=-2
+-- Quartas:  exato=+8,  vencedor=+3, invertido=-3
+-- Semis:    exato=+12, vencedor=+5, invertido=-4
+-- 3º Lugar: exato=+12, vencedor=+5, invertido=-4
+-- Final:    exato=+20, vencedor=+8, invertido=-5
 -- ================================================
 
 create or replace function public.calcular_pontos(jogo_id_param uuid)
@@ -13,6 +15,9 @@ declare
   jogo record;
   palpite record;
   pts integer;
+  pts_exato integer;
+  pts_vencedor integer;
+  pts_invertido integer;
   resultado_jogo text;
   resultado_palpite text;
 begin
@@ -21,6 +26,16 @@ begin
   if jogo is null or not jogo.encerrado then
     return;
   end if;
+
+  -- Define pontuação conforme a fase
+  case jogo.fase
+    when 'oitavas'  then pts_exato := 5;  pts_vencedor := 2; pts_invertido := -2;
+    when 'quartas'  then pts_exato := 8;  pts_vencedor := 3; pts_invertido := -3;
+    when 'semis'    then pts_exato := 12; pts_vencedor := 5; pts_invertido := -4;
+    when 'terceiro' then pts_exato := 12; pts_vencedor := 5; pts_invertido := -4;
+    when 'final'    then pts_exato := 20; pts_vencedor := 8; pts_invertido := -5;
+    else                 pts_exato := 3;  pts_vencedor := 1; pts_invertido := -1; -- grupos
+  end case;
 
   resultado_jogo := case
     when jogo.gols_casa > jogo.gols_fora then 'casa'
@@ -38,17 +53,13 @@ begin
     end;
 
     if palpite.gols_casa = jogo.gols_casa and palpite.gols_fora = jogo.gols_fora then
-      -- Placar exato
-      pts := 3;
+      pts := pts_exato;
     elsif palpite.gols_casa = jogo.gols_fora and palpite.gols_fora = jogo.gols_casa
           and palpite.gols_casa != palpite.gols_fora then
-      -- Placar invertido exato (ex: palpitou 2×0, saiu 0×2)
-      pts := -1;
+      pts := pts_invertido;
     elsif resultado_palpite = resultado_jogo then
-      -- Acertou o vencedor ou empate
-      pts := 1;
+      pts := pts_vencedor;
     else
-      -- Errou tudo
       pts := 0;
     end if;
 
@@ -56,21 +67,20 @@ begin
     set pontos = pts, updated_at = now()
     where id = palpite.id;
 
-    -- Atualiza ranking
     insert into public.ranking (user_id, total_pontos, acertos_exatos, acertos_resultado, jogos_palpitados)
     values (
       palpite.user_id,
       pts,
-      case when pts = 3 then 1 else 0 end,
-      case when pts = 1 then 1 else 0 end,
+      case when pts = pts_exato then 1 else 0 end,
+      case when pts = pts_vencedor then 1 else 0 end,
       1
     )
     on conflict (user_id) do update set
-      total_pontos       = ranking.total_pontos + excluded.total_pontos,
-      acertos_exatos     = ranking.acertos_exatos + excluded.acertos_exatos,
-      acertos_resultado  = ranking.acertos_resultado + excluded.acertos_resultado,
-      jogos_palpitados   = ranking.jogos_palpitados + excluded.jogos_palpitados,
-      updated_at         = now();
+      total_pontos      = ranking.total_pontos + excluded.total_pontos,
+      acertos_exatos    = ranking.acertos_exatos + excluded.acertos_exatos,
+      acertos_resultado = ranking.acertos_resultado + excluded.acertos_resultado,
+      jogos_palpitados  = ranking.jogos_palpitados + excluded.jogos_palpitados,
+      updated_at        = now();
   end loop;
 end;
 $$;

@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { useState } from "react";
+import RegrasBolao from "@/components/RegrasBolao";
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
@@ -73,13 +74,7 @@ export default function LoginPage() {
         </p>
       </div>
 
-      <div className="text-center text-xs text-green-200 mt-6 space-y-1">
-        <p className="font-semibold text-[#ffdf00]">📋 Pontuação</p>
-        <p>🏆 Placar exato = <strong>+3 pts</strong></p>
-        <p>✅ Acertou vencedor/empate = <strong>+1 pt</strong></p>
-        <p>❌ Errou o resultado = <strong>0 pts</strong></p>
-        <p>💀 Placar invertido exato = <strong>-1 pt</strong></p>
-      </div>
+      <RegrasBolao />
     </div>
   );
 }

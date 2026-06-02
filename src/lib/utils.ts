@@ -38,6 +38,16 @@ export function bandeiraPais(codigo: string | null): string {
   return map[codigo] ?? "🏳️";
 }
 
+// Pontuação por fase
+export const PONTUACAO: Record<string, { exato: number; vencedor: number; invertido: number }> = {
+  grupos:   { exato: 3,  vencedor: 1, invertido: -1 },
+  oitavas:  { exato: 5,  vencedor: 2, invertido: -2 },
+  quartas:  { exato: 8,  vencedor: 3, invertido: -3 },
+  semis:    { exato: 12, vencedor: 5, invertido: -4 },
+  terceiro: { exato: 12, vencedor: 5, invertido: -4 },
+  final:    { exato: 20, vencedor: 8, invertido: -5 },
+};
+
 export function labelFase(fase: string): string {
   const map: Record<string, string> = {
     grupos: "Fase de Grupos",
