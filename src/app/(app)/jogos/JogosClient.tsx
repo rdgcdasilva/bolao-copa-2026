@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { Jogo, Palpite, Perfil } from "@/types";
-import { formatDataHora, jogoAberto, bandeiraPais, labelFase, cn, PONTUACAO } from "@/lib/utils";
+import { formatDataHora, jogoAberto, palpiteAberto, tempoAtePalpiteFecha, bandeiraPais, labelFase, cn, PONTUACAO } from "@/lib/utils";
 import RegrasBolao from "@/components/RegrasBolao";
 
 interface Props {
@@ -120,6 +120,8 @@ export default function JogosClient({ jogosIniciais, palpitesIniciais, userId, p
                   const palpite = palpites.get(jogo.id);
                   const draft = drafts.get(jogo.id);
                   const aberto = jogoAberto(jogo.data_hora);
+                  const aceitaPalpite = palpiteAberto(jogo.data_hora);
+                  const tempoFecha = tempoAtePalpiteFecha(jogo.data_hora);
                   const isSaving = saving.has(jogo.id);
                   const temDraft = !!draft;
 
@@ -131,17 +133,23 @@ export default function JogosClient({ jogosIniciais, palpitesIniciais, userId, p
                       key={jogo.id}
                       className={cn(
                         "bg-white rounded-2xl shadow-sm border overflow-hidden",
-                        jogo.encerrado ? "border-gray-200" : aberto ? "border-[#009c3b]/30" : "border-orange-200"
+                        jogo.encerrado ? "border-gray-200" :
+                        aceitaPalpite ? "border-[#009c3b]/30" :
+                        aberto ? "border-orange-200" : "border-orange-200"
                       )}
                     >
                       {/* Status bar */}
                       <div className={cn(
                         "px-4 py-1.5 flex justify-between items-center text-xs",
-                        jogo.encerrado ? "bg-gray-100 text-gray-500" : aberto ? "bg-green-50 text-green-700" : "bg-orange-50 text-orange-700"
+                        jogo.encerrado ? "bg-gray-100 text-gray-500" :
+                        aceitaPalpite ? "bg-green-50 text-green-700" :
+                        "bg-orange-50 text-orange-700"
                       )}>
                         <span>{formatDataHora(jogo.data_hora)}</span>
                         <span className="font-medium">
-                          {jogo.encerrado ? "Encerrado" : aberto ? "Aberto para palpite" : "Em andamento"}
+                          {jogo.encerrado ? "Encerrado" :
+                           aceitaPalpite ? (tempoFecha || "Aberto para palpite") :
+                           aberto ? "Palpite fechado" : "Palpite fechado"}
                         </span>
                       </div>
 
@@ -194,7 +202,7 @@ export default function JogosClient({ jogosIniciais, palpitesIniciais, userId, p
                         </div>
 
                         {/* Input de palpite */}
-                        {aberto && !jogo.encerrado && (
+                        {aceitaPalpite && !jogo.encerrado && (
                           <div className="mt-4 pt-3 border-t border-gray-100">
                             <p className="text-xs text-gray-400 text-center mb-2">Seu palpite</p>
                             <div className="flex items-center justify-center gap-3">
@@ -262,9 +270,16 @@ export default function JogosClient({ jogosIniciais, palpitesIniciais, userId, p
                         )}
 
                         {/* Jogo fechado sem palpite */}
-                        {!aberto && !jogo.encerrado && !palpite && (
+                        {!aceitaPalpite && !jogo.encerrado && !palpite && (
                           <div className="mt-3 pt-3 border-t border-gray-100 text-center text-xs text-orange-500">
                             Prazo encerrado — você não palpitou
+                          </div>
+                        )}
+
+                        {/* Jogo fechado com palpite salvo */}
+                        {!aceitaPalpite && !jogo.encerrado && palpite && (
+                          <div className="mt-3 pt-3 border-t border-gray-100 text-center text-xs text-gray-400">
+                            Palpite salvo: {palpite.gols_casa} × {palpite.gols_fora} · prazo encerrado
                           </div>
                         )}
                       </div>

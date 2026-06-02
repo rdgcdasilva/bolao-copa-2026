@@ -19,6 +19,22 @@ export function jogoAberto(dataHora: string): boolean {
   return new Date(dataHora) > new Date();
 }
 
+// Palpite pode ser feito/alterado até 24h antes do jogo
+export function palpiteAberto(dataHora: string): boolean {
+  const umaHora24 = 24 * 60 * 60 * 1000;
+  return new Date(dataHora).getTime() - Date.now() > umaHora24;
+}
+
+export function tempoAtePalpiteFecha(dataHora: string): string {
+  const diff = new Date(dataHora).getTime() - Date.now() - 24 * 60 * 60 * 1000;
+  if (diff <= 0) return "";
+  const dias = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const horas = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  if (dias > 0) return `Fecha em ${dias}d ${horas}h`;
+  const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  return `Fecha em ${horas}h ${mins}min`;
+}
+
 export function bandeiraPais(codigo: string | null): string {
   if (!codigo) return "🏳️";
   const map: Record<string, string> = {
