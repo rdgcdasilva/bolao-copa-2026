@@ -103,7 +103,7 @@ export default function JogosClient({ jogosIniciais, palpitesIniciais, userId, p
         </div>
       </div>
 
-      {/* Lista de jogos */}
+      {/* Lista de jogos - ordenados por data */}
       <div className="px-4 py-4">
         <div className="space-y-3">
           {jogosFiltrados.map((jogo) => {
