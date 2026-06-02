@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --verde: #009c3b;
+  --amarelo: #ffdf00;
+  --azul: #002776;
+}
+
+body {
+  @apply bg-gray-50 text-gray-900;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Scrollbar mobile-friendly */
+* {
+  -webkit-overflow-scrolling: touch;
+}
