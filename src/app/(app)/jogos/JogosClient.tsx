@@ -21,7 +21,6 @@ export default function JogosClient({ jogosIniciais, palpitesIniciais, userId, p
   const [saving, setSaving] = useState<Set<string>>(new Set());
   const [drafts, setDrafts] = useState<Map<string, { casa: string; fora: string }>>(new Map());
   const [faseFiltro, setFaseFiltro] = useState<string>("grupos");
-  const [mostrarRegras, setMostrarRegras] = useState(false);
   const supabase = createClient();
 
   useEffect(() => {
@@ -73,23 +72,15 @@ export default function JogosClient({ jogosIniciais, palpitesIniciais, userId, p
     <div className="max-w-lg mx-auto">
       {/* Header */}
       <div className="bg-gradient-to-r from-[#009c3b] to-[#002776] px-4 pt-12 pb-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-3">
           <div>
             <h1 className="text-white font-bold text-xl">⚽ Bolão 2026</h1>
             <p className="text-green-200 text-xs mt-0.5">Olá, {perfil?.nome?.split(" ")[0]}!</p>
           </div>
-          <button onClick={() => setMostrarRegras((v) => !v)}
-            className="text-xs text-green-200 underline underline-offset-2">
-            📋 Ver regras
-          </button>
         </div>
 
-        {/* Regras expansíveis */}
-        {mostrarRegras && (
-          <div className="mt-2">
-            <RegrasBolao />
-          </div>
-        )}
+        {/* Regras sempre visíveis */}
+        <RegrasBolao />
 
         {/* Filtro de fase */}
         <div className="flex gap-2 mt-4 overflow-x-auto pb-1 scrollbar-hide">

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { Jogo, Perfil, Fase } from "@/types";
 import { formatDataHora, bandeiraPais, labelFase, cn } from "@/lib/utils";
-import { XCircle, RefreshCw, PlusCircle } from "lucide-react";
+import { XCircle, RefreshCw, PlusCircle, Trash2 } from "lucide-react";
 
 interface Props {
   jogos: Jogo[];
@@ -103,6 +103,21 @@ export default function AdminClient({ jogos, participantes }: Props) {
     await supabase.from("jogos").update({ gols_casa: null, gols_fora: null, encerrado: false }).eq("id", jogoId);
     setJogosState((prev) => prev.map((j) => j.id === jogoId ? { ...j, gols_casa: null, gols_fora: null, encerrado: false } : j));
     showToast("🔄 Jogo reaberto.");
+  }
+
+  async function apagarJogo(jogoId: string, fase: string) {
+    if (fase === "grupos") {
+      showToast("❌ Jogos da fase de grupos não podem ser apagados.");
+      return;
+    }
+    if (!confirm("Apagar este jogo? Os palpites também serão removidos.")) return;
+    const { error } = await supabase.from("jogos").delete().eq("id", jogoId);
+    if (!error) {
+      setJogosState((prev) => prev.filter((j) => j.id !== jogoId));
+      showToast("🗑️ Jogo apagado.");
+    } else {
+      showToast("❌ Erro ao apagar jogo.");
+    }
   }
 
   async function toggleAdmin(userId: string, atual: boolean) {
@@ -316,6 +331,12 @@ export default function AdminClient({ jogos, participantes }: Props) {
                             <button onClick={() => reabrirJogo(jogo.id)} title="Reabrir jogo"
                               className="h-9 w-9 flex items-center justify-center text-gray-400 border rounded-lg">
                               <RefreshCw size={16} />
+                            </button>
+                          )}
+                          {jogo.fase !== "grupos" && (
+                            <button onClick={() => apagarJogo(jogo.id, jogo.fase)} title="Apagar jogo"
+                              className="h-9 w-9 flex items-center justify-center text-red-400 border border-red-200 rounded-lg">
+                              <Trash2 size={16} />
                             </button>
                           )}
                         </div>
