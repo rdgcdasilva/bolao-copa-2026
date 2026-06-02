@@ -4,49 +4,36 @@ import { useEffect, useState } from "react";
 import { createAuthClient } from "@/lib/supabase/auth-client";
 
 export default function AuthCallbackPage() {
-  const [status, setStatus] = useState("Autenticando...");
+  const [status, setStatus] = useState("Entrando...");
 
   useEffect(() => {
     const supabase = createAuthClient();
 
     async function handleCallback() {
-      const params = new URLSearchParams(window.location.search);
-      const code = params.get("code");
+      // Aguarda um momento para o Supabase processar o token da URL
+      await new Promise((r) => setTimeout(r, 500));
 
-      if (!code) {
-        // Tenta detectar sessão pelo hash (fallback)
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          setStatus("Sessão detectada! Entrando...");
-          setTimeout(() => { window.location.href = "/jogos"; }, 300);
-        } else {
-          setStatus("Código não encontrado.");
-          setTimeout(() => { window.location.href = "/login"; }, 1500);
-        }
+      const { data: { session }, error } = await supabase.auth.getSession();
+
+      if (session) {
+        setStatus("Bem-vindo! Carregando...");
+        window.location.href = "/jogos";
         return;
       }
 
-      setStatus("Verificando credenciais...");
-      const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-
-      if (error) {
-        // Tenta pegar sessão existente mesmo com erro
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
+      // Tenta trocar código se vier via PKCE (fallback)
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get("code");
+      if (code) {
+        const { data, error: exchError } = await supabase.auth.exchangeCodeForSession(code);
+        if (!exchError && data.session) {
           window.location.href = "/jogos";
           return;
         }
-        setStatus("Erro ao autenticar. Redirecionando...");
-        setTimeout(() => { window.location.href = "/login"; }, 2000);
-        return;
       }
 
-      if (data.session) {
-        setStatus("Bem-vindo! Entrando no bolão...");
-        setTimeout(() => { window.location.href = "/jogos"; }, 300);
-      } else {
-        window.location.href = "/login";
-      }
+      setStatus("Não foi possível autenticar. Redirecionando...");
+      setTimeout(() => { window.location.href = "/login"; }, 2000);
     }
 
     handleCallback();
