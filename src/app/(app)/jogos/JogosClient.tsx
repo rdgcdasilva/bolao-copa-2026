@@ -64,8 +64,11 @@ export default function JogosClient({ jogosIniciais, palpitesIniciais, userId, p
     setSaving((prev) => { const s = new Set(prev); s.delete(jogoId); return s; });
   }, [drafts, userId, supabase]);
 
-  const fases = Array.from(new Set(jogos.map((j) => j.fase)));
-  const jogosFiltrados = jogos.filter((j) => j.fase === faseFiltro);
+  const jogosOrdenados = [...jogos].sort((a, b) =>
+    new Date(a.data_hora).getTime() - new Date(b.data_hora).getTime()
+  );
+  const fases = Array.from(new Set(jogosOrdenados.map((j) => j.fase)));
+  const jogosFiltrados = jogosOrdenados.filter((j) => j.fase === faseFiltro);
 
   return (
     <div className="max-w-lg mx-auto">
