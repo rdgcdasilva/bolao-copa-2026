@@ -9,20 +9,15 @@ export default function AuthCallbackPage() {
   useEffect(() => {
     async function handleCallback() {
       const supabase = createAuthClient();
-      const params = new URLSearchParams(window.location.search);
-      const code = params.get("code");
 
-      if (!code) {
-        setStatus("Sem código de autenticação.");
-        setTimeout(() => { window.location.href = "/login"; }, 2000);
-        return;
-      }
+      // Com implicit flow, o token vem no hash da URL (#access_token=...)
+      // detectSessionInUrl: true faz o cliente processar automaticamente
+      // Aguarda o cliente processar o hash
+      await new Promise((r) => setTimeout(r, 800));
 
-      setStatus("Verificando credenciais...");
+      const { data: { session }, error } = await supabase.auth.getSession();
 
-      const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-
-      if (error || !data.session) {
+      if (error || !session) {
         setStatus("Erro ao autenticar. Tente novamente.");
         setTimeout(() => { window.location.href = "/login"; }, 2000);
         return;
@@ -30,13 +25,13 @@ export default function AuthCallbackPage() {
 
       setStatus("Sincronizando sessão...");
 
-      // Sincroniza a sessão com o servidor (seta cookies)
+      // Sincroniza a sessão com o servidor (seta cookies para SSR)
       const res = await fetch("/api/auth/set-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          access_token: data.session.access_token,
-          refresh_token: data.session.refresh_token,
+          access_token: session.access_token,
+          refresh_token: session.refresh_token,
         }),
       });
 
@@ -44,7 +39,7 @@ export default function AuthCallbackPage() {
         setStatus("Bem-vindo! Entrando no bolão...");
         window.location.href = "/jogos";
       } else {
-        setStatus("Erro ao sincronizar sessão.");
+        setStatus("Erro ao sincronizar. Tente novamente.");
         setTimeout(() => { window.location.href = "/login"; }, 2000);
       }
     }
@@ -54,7 +49,7 @@ export default function AuthCallbackPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#009c3b] to-[#002776]">
-      <div className="text-center text-white">
+      <div className="text-center text-white px-6">
         <div className="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4" />
         <p className="text-lg font-medium">{status}</p>
       </div>

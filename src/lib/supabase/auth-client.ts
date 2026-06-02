@@ -1,4 +1,4 @@
-// Cliente de auth — usa localStorage (funciona no iOS Safari e Android)
+// Cliente de auth — implicit flow (sem PKCE, funciona em WKWebView/iOS)
 import { createClient } from "@supabase/supabase-js";
 
 let authClient: ReturnType<typeof createClient> | null = null;
@@ -11,10 +11,9 @@ export function createAuthClient() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       auth: {
-        flowType: "pkce",
+        flowType: "implicit",
         detectSessionInUrl: true,
         persistSession: true,
-        storage: window.localStorage,
       },
     }
   );
