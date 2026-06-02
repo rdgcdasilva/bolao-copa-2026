@@ -1,12 +1,12 @@
 "use client";
 
-import { createClient } from "@/lib/supabase/client";
+import { createAuthClient } from "@/lib/supabase/auth-client";
 import { useState } from "react";
 import RegrasBolao from "@/components/RegrasBolao";
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
-  const supabase = createClient();
+  const supabase = createAuthClient();
 
   async function handleGoogleLogin() {
     setLoading(true);
