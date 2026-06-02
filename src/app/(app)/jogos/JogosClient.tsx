@@ -66,7 +66,6 @@ export default function JogosClient({ jogosIniciais, palpitesIniciais, userId, p
 
   const fases = Array.from(new Set(jogos.map((j) => j.fase)));
   const jogosFiltrados = jogos.filter((j) => j.fase === faseFiltro);
-  const grupos = Array.from(new Set(jogosFiltrados.map((j) => j.grupo).filter(Boolean)));
 
   return (
     <div className="max-w-lg mx-auto">
@@ -102,21 +101,9 @@ export default function JogosClient({ jogosIniciais, palpitesIniciais, userId, p
       </div>
 
       {/* Lista de jogos */}
-      <div className="px-4 py-4 space-y-6">
-        {(grupos.length > 0 ? grupos : [null]).map((grupo) => {
-          const jogosGrupo = grupo
-            ? jogosFiltrados.filter((j) => j.grupo === grupo)
-            : jogosFiltrados;
-
-          return (
-            <div key={grupo ?? "sem-grupo"}>
-              {grupo && (
-                <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">
-                  Grupo {grupo}
-                </h2>
-              )}
-              <div className="space-y-3">
-                {jogosGrupo.map((jogo) => {
+      <div className="px-4 py-4">
+        <div className="space-y-3">
+          {jogosFiltrados.map((jogo) => {
                   const palpite = palpites.get(jogo.id);
                   const draft = drafts.get(jogo.id);
                   const aberto = jogoAberto(jogo.data_hora);
@@ -145,11 +132,18 @@ export default function JogosClient({ jogosIniciais, palpitesIniciais, userId, p
                         aceitaPalpite ? "bg-green-50 text-green-700" :
                         "bg-orange-50 text-orange-700"
                       )}>
-                        <span>{formatDataHora(jogo.data_hora)}</span>
+                        <div className="flex items-center gap-2">
+                          <span>{formatDataHora(jogo.data_hora)}</span>
+                          {jogo.grupo && (
+                            <span className="bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded font-bold text-[10px]">
+                              Grupo {jogo.grupo}
+                            </span>
+                          )}
+                        </div>
                         <span className="font-medium">
                           {jogo.encerrado ? "Encerrado" :
-                           aceitaPalpite ? (tempoFecha || "Aberto para palpite") :
-                           aberto ? "Palpite fechado" : "Palpite fechado"}
+                           aceitaPalpite ? (tempoFecha || "Aberto") :
+                           "Fechado"}
                         </span>
                       </div>
 
@@ -284,12 +278,8 @@ export default function JogosClient({ jogosIniciais, palpitesIniciais, userId, p
                         )}
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
           );
-        })}
+          })}
       </div>
     </div>
   );
