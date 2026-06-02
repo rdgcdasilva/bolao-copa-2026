@@ -1,4 +1,4 @@
-export type Fase = "grupos" | "oitavas" | "quartas" | "semis" | "terceiro" | "final";
+export type Fase = "grupos" | "dezesseis" | "oitavas" | "quartas" | "semis" | "terceiro" | "final";
 
 export interface Perfil {
   id: string;

@@ -27,6 +27,7 @@ export default function RegrasBolao({ modo = "completo" }: Props) {
         </div>
         {[
           { fase: "Grupos",    exato: "+3",  venc: "+1", inv: "-1" },
+          { fase: "16-avos",   exato: "+4",  venc: "+2", inv: "-2" },
           { fase: "Oitavas",   exato: "+5",  venc: "+2", inv: "-2" },
           { fase: "Quartas",   exato: "+8",  venc: "+3", inv: "-3" },
           { fase: "Semifinal", exato: "+12", venc: "+5", inv: "-4" },

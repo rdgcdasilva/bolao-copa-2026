@@ -13,6 +13,7 @@ interface Props {
 }
 
 const FASES_MATA_MATA: { value: Fase; label: string }[] = [
+  { value: "dezesseis", label: "16-avos de Final" },
   { value: "oitavas", label: "Oitavas de Final" },
   { value: "quartas", label: "Quartas de Final" },
   { value: "semis", label: "Semifinal" },
