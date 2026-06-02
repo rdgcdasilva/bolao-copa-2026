@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { Jogo, Perfil, Fase } from "@/types";
 import { formatDataHora, bandeiraPais, labelFase, cn } from "@/lib/utils";
 import { XCircle, RefreshCw, PlusCircle, Trash2 } from "lucide-react";
+import RegrasBolao from "@/components/RegrasBolao";
 
 interface Props {
   jogos: Jogo[];
@@ -177,13 +178,7 @@ export default function AdminClient({ jogos, participantes }: Props) {
         <h1 className="text-white font-bold text-xl">🛡️ Painel Admin</h1>
 
         {/* Regras de pontuação */}
-        <div className="mt-3 bg-white/10 rounded-xl p-3 text-xs text-white space-y-1">
-          <p className="font-semibold text-[#ffdf00] mb-1">📋 Regras de pontuação</p>
-          <p>🏆 Placar exato → <strong>+3 pts</strong></p>
-          <p>✅ Acertou vencedor/empate → <strong>+1 pt</strong></p>
-          <p>❌ Errou o resultado → <strong>0 pts</strong></p>
-          <p>💀 Placar invertido exato (ex: palpitou 2×0, saiu 0×2) → <strong>-1 pt</strong></p>
-        </div>
+        <RegrasBolao />
 
         <div className="flex gap-2 mt-4 overflow-x-auto pb-1">
           {[
