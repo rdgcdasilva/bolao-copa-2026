@@ -15,17 +15,20 @@ export default function RankingClient({ rankingInicial, userId }: Props) {
   const [ranking, setRanking] = useState<RankingEntry[]>(rankingInicial);
   const supabase = createClient();
 
+  async function recarregarRanking() {
+    const { data } = await supabase
+      .from("ranking")
+      .select("*, perfis(*)")
+      .order("total_pontos", { ascending: false })
+      .order("acertos_exatos", { ascending: false });
+    if (data) setRanking(data);
+  }
+
   useEffect(() => {
     const channel = supabase
       .channel("ranking-realtime")
-      .on("postgres_changes", { event: "*", schema: "public", table: "ranking" }, async () => {
-        const { data } = await supabase
-          .from("ranking")
-          .select("*, perfis(*)")
-          .order("total_pontos", { ascending: false })
-          .order("acertos_exatos", { ascending: false });
-        if (data) setRanking(data);
-      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "ranking" }, recarregarRanking)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "perfis" }, recarregarRanking)
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
@@ -35,6 +38,16 @@ export default function RankingClient({ rankingInicial, userId }: Props) {
   const myPosition = ranking.findIndex((r) => r.user_id === userId) + 1;
   const myEntry = ranking.find((r) => r.user_id === userId);
 
+  const totalParticipantes = ranking.length;
+  const premioTotal = totalParticipantes * 100;
+  const premio1 = premioTotal * 0.5;
+  const premio2 = premioTotal * 0.3;
+  const premio3 = premioTotal * 0.2;
+
+  function formatReais(valor: number) {
+    return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0 });
+  }
+
   return (
     <div className="max-w-lg mx-auto">
       {/* Header */}
@@ -42,9 +55,39 @@ export default function RankingClient({ rankingInicial, userId }: Props) {
         <h1 className="text-white font-bold text-xl">🏆 Ranking ao vivo</h1>
         <p className="text-blue-200 text-xs mt-0.5">Atualizado em tempo real</p>
 
+        {/* Card de premiação */}
+        <div className="mt-4 bg-[#ffdf00] rounded-2xl p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <p className="text-[#002776] font-bold text-sm">💰 Premiação total</p>
+              <p className="text-[#002776]/70 text-xs">{totalParticipantes} participante{totalParticipantes !== 1 ? "s" : ""} × R$100</p>
+            </div>
+            <div className="text-[#002776] font-black text-2xl">
+              {formatReais(premioTotal)}
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { pos: "1º", emoji: "🥇", pct: "50%", valor: premio1, nome: ranking[0]?.perfis?.nome?.split(" ")[0] },
+              { pos: "2º", emoji: "🥈", pct: "30%", valor: premio2, nome: ranking[1]?.perfis?.nome?.split(" ")[0] },
+              { pos: "3º", emoji: "🥉", pct: "20%", valor: premio3, nome: ranking[2]?.perfis?.nome?.split(" ")[0] },
+            ].map(({ pos, emoji, pct, valor, nome }) => (
+              <div key={pos} className="bg-[#002776] rounded-xl p-2.5 text-center">
+                <div className="text-lg">{emoji}</div>
+                <div className="text-[#ffdf00] font-bold text-sm">{formatReais(valor)}</div>
+                <div className="text-white/70 text-[10px]">{pct}</div>
+                {nome && <div className="text-white text-[10px] font-medium truncate mt-0.5">{nome}</div>}
+              </div>
+            ))}
+          </div>
+          <p className="text-[#002776]/60 text-[10px] text-center mt-2">
+            +R$100 por novo participante · atualiza em tempo real
+          </p>
+        </div>
+
         {/* Minha posição */}
         {myEntry && (
-          <div className="mt-4 bg-white/10 rounded-2xl p-4 flex items-center gap-3">
+          <div className="mt-3 bg-white/10 rounded-2xl p-4 flex items-center gap-3">
             <div className="text-2xl font-bold text-[#ffdf00]">
               {myPosition}º
             </div>
