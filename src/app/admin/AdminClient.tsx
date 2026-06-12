@@ -89,12 +89,16 @@ export default function AdminClient({ jogos, participantes }: Props) {
       .eq("id", editando.jogoId);
 
     if (!error) {
-      await supabase.rpc("calcular_pontos", { jogo_id_param: editando.jogoId });
+      const { error: rpcError } = await supabase.rpc("calcular_pontos", { jogo_id_param: editando.jogoId });
       setJogosState((prev) =>
         prev.map((j) => j.id === editando.jogoId ? { ...j, gols_casa: casa, gols_fora: fora, encerrado: true } : j)
       );
       setEditando(null);
-      showToast("✅ Resultado salvo e pontos calculados!");
+      if (rpcError) {
+        showToast(`⚠️ Placar salvo, mas erro ao calcular pontos: ${rpcError.message}`);
+      } else {
+        showToast("✅ Resultado salvo e pontos calculados!");
+      }
     } else {
       showToast("❌ Erro ao salvar resultado.");
     }
