@@ -117,7 +117,8 @@ begin
       from public.palpites p
       where p.user_id = r.user_id
     ),
-    updated_at = now();
+    updated_at = now()
+  where true;
 end;
 $$;
 
