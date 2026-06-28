@@ -19,14 +19,15 @@ export function jogoAberto(dataHora: string): boolean {
   return new Date(dataHora) > new Date();
 }
 
-// Palpite pode ser feito/alterado até 24h antes do jogo
+// Palpite pode ser feito/alterado até 10 minutos antes do jogo
+const ANTECEDENCIA_PALPITE_MS = 10 * 60 * 1000;
+
 export function palpiteAberto(dataHora: string): boolean {
-  const umaHora24 = 24 * 60 * 60 * 1000;
-  return new Date(dataHora).getTime() - Date.now() > umaHora24;
+  return new Date(dataHora).getTime() - Date.now() > ANTECEDENCIA_PALPITE_MS;
 }
 
 export function tempoAtePalpiteFecha(dataHora: string): string {
-  const diff = new Date(dataHora).getTime() - Date.now() - 24 * 60 * 60 * 1000;
+  const diff = new Date(dataHora).getTime() - Date.now() - ANTECEDENCIA_PALPITE_MS;
   if (diff <= 0) return "";
   const dias = Math.floor(diff / (1000 * 60 * 60 * 24));
   const horas = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
