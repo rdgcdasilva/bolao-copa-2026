@@ -59,6 +59,8 @@ export default function JogosClient({ jogosIniciais, palpitesIniciais, userId, p
     if (!error && data) {
       setPalpites((prev) => new Map(prev).set(jogoId, data));
       setDrafts((prev) => { const m = new Map(prev); m.delete(jogoId); return m; });
+    } else if (error) {
+      alert(`Erro ao salvar palpite: ${error.message}`);
     }
 
     setSaving((prev) => { const s = new Set(prev); s.delete(jogoId); return s; });
