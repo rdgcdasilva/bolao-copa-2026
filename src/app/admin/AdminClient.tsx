@@ -53,7 +53,7 @@ const PAISES: { codigo: string; nome: string }[] = [
 export default function AdminClient({ jogos, participantes }: Props) {
   const [aba, setAba] = useState<"jogos" | "participantes" | "novojogo">("jogos");
   const [jogosState, setJogosState] = useState<Jogo[]>(jogos);
-  const [editando, setEditando] = useState<{ jogoId: string; casa: string; fora: string } | null>(null);
+  const [editando, setEditando] = useState<{ jogoId: string; casa: string; fora: string; penaltis: "casa" | "fora" | null } | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -82,16 +82,30 @@ export default function AdminClient({ jogos, participantes }: Props) {
     const fora = parseInt(editando.fora);
     if (isNaN(casa) || isNaN(fora)) return;
 
+    const jogoAtual = jogosState.find((j) => j.id === editando.jogoId);
+    const precisaPenaltis = jogoAtual && jogoAtual.fase !== "grupos" && casa === fora;
+    if (precisaPenaltis && !editando.penaltis) {
+      showToast("⚠️ Selecione quem venceu na prorrogação/pênaltis.");
+      return;
+    }
+
     setSalvando(true);
     const { error } = await supabase
       .from("jogos")
-      .update({ gols_casa: casa, gols_fora: fora, encerrado: true })
+      .update({
+        gols_casa: casa,
+        gols_fora: fora,
+        encerrado: true,
+        vencedor_penaltis: precisaPenaltis ? editando.penaltis : null,
+      })
       .eq("id", editando.jogoId);
 
     if (!error) {
       const { error: rpcError } = await supabase.rpc("calcular_pontos", { jogo_id_param: editando.jogoId });
       setJogosState((prev) =>
-        prev.map((j) => j.id === editando.jogoId ? { ...j, gols_casa: casa, gols_fora: fora, encerrado: true } : j)
+        prev.map((j) => j.id === editando.jogoId
+          ? { ...j, gols_casa: casa, gols_fora: fora, encerrado: true, vencedor_penaltis: precisaPenaltis ? editando.penaltis : null }
+          : j)
       );
       setEditando(null);
       if (rpcError) {
@@ -106,8 +120,8 @@ export default function AdminClient({ jogos, participantes }: Props) {
   }
 
   async function reabrirJogo(jogoId: string) {
-    await supabase.from("jogos").update({ gols_casa: null, gols_fora: null, encerrado: false }).eq("id", jogoId);
-    setJogosState((prev) => prev.map((j) => j.id === jogoId ? { ...j, gols_casa: null, gols_fora: null, encerrado: false } : j));
+    await supabase.from("jogos").update({ gols_casa: null, gols_fora: null, encerrado: false, vencedor_penaltis: null }).eq("id", jogoId);
+    setJogosState((prev) => prev.map((j) => j.id === jogoId ? { ...j, gols_casa: null, gols_fora: null, encerrado: false, vencedor_penaltis: null } : j));
     showToast("🔄 Jogo reaberto.");
   }
 
@@ -303,27 +317,56 @@ export default function AdminClient({ jogos, participantes }: Props) {
                         </div>
                       </div>
 
+                      {jogo.encerrado && jogo.vencedor_penaltis && (
+                        <div className="mt-2 text-center text-xs font-semibold text-[#002776] bg-[#ffdf00]/30 rounded-lg py-1">
+                          🥅 {jogo.vencedor_penaltis === "casa" ? jogo.time_casa : jogo.time_fora} venceu nos pênaltis/prorrogação
+                        </div>
+                      )}
+
                       {editando?.jogoId === jogo.id ? (
-                        <div className="mt-3 pt-3 border-t flex items-center gap-2">
-                          <input type="number" inputMode="numeric" min={0} value={editando.casa}
-                            onChange={(e) => setEditando({ ...editando, casa: e.target.value })}
-                            className="w-12 h-10 text-center font-bold border-2 border-[#002776] rounded-lg focus:outline-none" />
-                          <span className="text-gray-400">×</span>
-                          <input type="number" inputMode="numeric" min={0} value={editando.fora}
-                            onChange={(e) => setEditando({ ...editando, fora: e.target.value })}
-                            className="w-12 h-10 text-center font-bold border-2 border-[#002776] rounded-lg focus:outline-none" />
-                          <button onClick={salvarResultado} disabled={salvando}
-                            className="flex-1 h-10 bg-[#009c3b] text-white rounded-lg text-sm font-semibold">
-                            {salvando ? "…" : "Confirmar"}
-                          </button>
-                          <button onClick={() => setEditando(null)}
-                            className="h-10 w-10 flex items-center justify-center text-gray-400 border rounded-lg">
-                            <XCircle size={18} />
-                          </button>
+                        <div className="mt-3 pt-3 border-t space-y-2">
+                          <div className="flex items-center gap-2">
+                            <input type="number" inputMode="numeric" min={0} value={editando.casa}
+                              onChange={(e) => setEditando({ ...editando, casa: e.target.value })}
+                              className="w-12 h-10 text-center font-bold border-2 border-[#002776] rounded-lg focus:outline-none" />
+                            <span className="text-gray-400">×</span>
+                            <input type="number" inputMode="numeric" min={0} value={editando.fora}
+                              onChange={(e) => setEditando({ ...editando, fora: e.target.value })}
+                              className="w-12 h-10 text-center font-bold border-2 border-[#002776] rounded-lg focus:outline-none" />
+                            <button onClick={salvarResultado} disabled={salvando}
+                              className="flex-1 h-10 bg-[#009c3b] text-white rounded-lg text-sm font-semibold">
+                              {salvando ? "…" : "Confirmar"}
+                            </button>
+                            <button onClick={() => setEditando(null)}
+                              className="h-10 w-10 flex items-center justify-center text-gray-400 border rounded-lg">
+                              <XCircle size={18} />
+                            </button>
+                          </div>
+
+                          {jogo.fase !== "grupos" && editando.casa !== "" && editando.fora !== ""
+                            && parseInt(editando.casa) === parseInt(editando.fora) && !isNaN(parseInt(editando.casa)) && (
+                            <div className="bg-gray-50 rounded-lg p-2">
+                              <p className="text-xs text-gray-500 mb-1.5">Empate no tempo normal — quem venceu na prorrogação/pênaltis?</p>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => setEditando({ ...editando, penaltis: "casa" })}
+                                  className={cn("flex-1 h-9 rounded-lg text-xs font-semibold border-2",
+                                    editando.penaltis === "casa" ? "bg-[#002776] text-white border-[#002776]" : "border-gray-200 text-gray-600")}>
+                                  {jogo.time_casa}
+                                </button>
+                                <button
+                                  onClick={() => setEditando({ ...editando, penaltis: "fora" })}
+                                  className={cn("flex-1 h-9 rounded-lg text-xs font-semibold border-2",
+                                    editando.penaltis === "fora" ? "bg-[#002776] text-white border-[#002776]" : "border-gray-200 text-gray-600")}>
+                                  {jogo.time_fora}
+                                </button>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       ) : (
                         <div className="mt-3 pt-3 border-t flex gap-2">
-                          <button onClick={() => setEditando({ jogoId: jogo.id, casa: String(jogo.gols_casa ?? ""), fora: String(jogo.gols_fora ?? "") })}
+                          <button onClick={() => setEditando({ jogoId: jogo.id, casa: String(jogo.gols_casa ?? ""), fora: String(jogo.gols_fora ?? ""), penaltis: jogo.vencedor_penaltis })}
                             className="flex-1 h-9 bg-[#002776] text-white rounded-lg text-xs font-semibold">
                             {jogo.encerrado ? "Corrigir placar" : "Inserir resultado"}
                           </button>

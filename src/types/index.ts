@@ -22,6 +22,7 @@ export interface Jogo {
   gols_fora: number | null;
   encerrado: boolean;
   ordem: number;
+  vencedor_penaltis: "casa" | "fora" | null;
 }
 
 export interface Palpite {

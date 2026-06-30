@@ -200,6 +200,12 @@ export default function JogosClient({ jogosIniciais, palpitesIniciais, userId, p
                           </div>
                         </div>
 
+                        {jogo.encerrado && jogo.vencedor_penaltis && (
+                          <div className="mt-2 text-center text-[11px] font-semibold text-[#002776] bg-[#ffdf00]/30 rounded-lg py-1">
+                            🥅 {jogo.vencedor_penaltis === "casa" ? jogo.time_casa : jogo.time_fora} venceu nos pênaltis/prorrogação
+                          </div>
+                        )}
+
                         {/* Input de palpite */}
                         {aceitaPalpite && !jogo.encerrado && (
                           <div className="mt-4 pt-3 border-t border-gray-100">
